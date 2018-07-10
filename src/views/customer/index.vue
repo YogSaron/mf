@@ -12,9 +12,10 @@
 
     <div class="right-table">
       <div class="filter-container">
-        <el-button type="primary" size="small" @click="addProduct('customerForm')">添加</el-button>
-        <el-button type="success" size="small" @click="editProduct('customerForm')">修改</el-button>
-        <el-button type="success" size="small" @click="deleteProduct('customerForm')">删除</el-button>
+        <el-button type="primary" size="small" @click="addProduct('productForm')">添加</el-button>
+        <el-button type="success" size="small" @click="editProduct('productForm')">修改</el-button>
+        <el-button type="success" size="small" @click="deleteProduct('productForm')">删除</el-button>
+       
       </div>
       <el-table :data="currentProductList" border>
 
@@ -48,30 +49,31 @@
         <el-button type="primary" @click="cusSubmit">确 定</el-button>
       </div>
     </el-dialog>
+    <!-- 产品弹窗 -->
     <el-dialog title="产品添加" :visible.sync="dialogVisible2" width="360px">
-      <el-form :model="form" ref="customerForm" label-width="80px" label-position="left">
-        <el-form-item label="客户名称" prop="customerName">
-          <el-input v-model="form.customerName" auto-complete="off"></el-input>
+      <el-form :model="form" ref="productForm" label-width="80px" label-position="left">
+         <el-form-item label="客户名称" prop="customerName">
+          <el-input v-model="currentRow.customerName" auto-complete="off" readonly></el-input>
         </el-form-item>
-        <el-form-item label="地址" prop="address">
-          <el-input v-model="form.address" auto-complete="off"></el-input>
+        <el-form-item label="型号" prop="model">
+          <el-input v-model="productForm.model" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="电话" prop="tel">
-          <el-input v-model="form.tel" auto-complete="off"></el-input>
+        <el-form-item label="包装" prop="packaging">
+          <el-input v-model="productForm.packaging" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="手机" prop="mobile">
-          <el-input v-model="form.mobile" auto-complete="off"></el-input>
+        <el-form-item label="单价" prop="unitPrice">
+          <el-input v-model="productForm.unitPrice" auto-complete="off"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="cusSubmit">确 定</el-button>
+        <el-button @click="dialogVisible2 = false">取 消</el-button>
+        <el-button type="primary" @click="proSubmit">确 定</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 <script>
-import { getCustomerList, addCustomer } from '@/api/customer'
+import { getCustomerList, addCustomer, getProductListByParentId, addProduct } from '@/api/customer'
 import customerList from '@/components/tables/customerList'
 export default {
   name: 'customer',
@@ -83,9 +85,11 @@ export default {
       customerList: [],
       currentProductList: [],
       productList: [
-        { customerName: '张三', model: 'X1', package: '白盒', unitPrice: '20' },
-        { customerName: '李四', model: 'H1', package: '彩盒', unitPrice: '50' }
       ],
+      currentRow: {
+        id: '',
+        customerName: ''
+      },
       form: {
         customerName: '',
         address: '',
@@ -93,7 +97,13 @@ export default {
         mobile: '',
         type: 1
       },
-      dialogVisible: false
+      productForm: {
+        model: '',
+        packaging: '',
+        unitPrice: ''
+      },
+      dialogVisible: false,
+      dialogVisible2: false
     }
   },
   methods: {
@@ -102,21 +112,41 @@ export default {
       this.$refs[customerForm].resetFields()
     },
     chooseCustomer(row) {
-      this.currentProductList = this.productList.filter(item => {
-        return item.customerName === row.customerName
+      // this.currentProductList = this.productList.filter(item => {
+      //   return item.customerName === row.customerName
+      // })
+      this.currentRow = row
+      getProductListByParentId(row.id).then(response => {
+        this.currentProductList = response.data
       })
     },
     cusSubmit() {
       addCustomer(this.form).then(response => {
-        this.$message('提交成功')
+        this.$message({ type: 'success', message: '提交成功' })
         this.dialogVisible = false
         this.loadingCustomerList()
+      })
+    },
+    proSubmit() {
+      this.productForm.parentId = this.currentRow.id
+      addProduct(this.productForm).then(response => {
+        this.$message({ type: 'success', message: '保存成功' })
+        this.dialogVisible2 = false
+        this.chooseCustomer(this.currentRow)
       })
     },
     loadingCustomerList() {
       getCustomerList().then(response => {
         this.customerList = response.data.list
       })
+    },
+    addProduct(productForm) {
+      if (!this.currentRow.id) {
+        this.$message({ type: 'warning', message: '请先选择一个客户' })
+        return
+      }
+      this.dialogVisible2 = true
+      this.$refs[productForm].resetFields()
     }
   },
   mounted() {

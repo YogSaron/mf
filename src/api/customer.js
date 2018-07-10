@@ -14,3 +14,20 @@ export function addCustomer(form) {
     data: form
   })
 }
+
+export function getProductListByParentId(parentId) {
+  return request({
+    url: '/sys/out/cus/product/listByParentId',
+    method: 'get',
+    params: { parentId }
+  })
+}
+
+export function addProduct(form) {
+  return request({
+    url: '/sys/out/cus/product/add',
+    method: 'post',
+    data: form
+  })
+}
+
