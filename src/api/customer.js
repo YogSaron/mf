@@ -7,6 +7,14 @@ export function getCustomerList() {
   })
 }
 
+export function getCustomerListByType(form) {
+  return request({
+    url: '/sys/customer/type/list',
+    method: 'get',
+    params: form
+  })
+}
+
 export function addCustomer(form) {
   return request({
     url: '/sys/customer/add',

@@ -7,15 +7,23 @@
         <el-button type="success" size="small" @click="editCustomer('customerForm')">修改</el-button>
         <el-button type="danger" size="small" @click="delCustomer('customerForm')">删除</el-button>
       </div>
-      <customer-list :list="customerList" @add="chooseCustomer"></customer-list>
+      <el-tabs v-model="tabName" type="border-card" @tab-click="handleClick">
+        <el-tab-pane label="出货客户" name="out">
+          <customer-list :list="customerList" @add="chooseCustomer"></customer-list>
+        </el-tab-pane>
+        <el-tab-pane label="采购客户" name="in">
+          <customer-list :list="customerList" @add="chooseCustomer"></customer-list>
+        </el-tab-pane>
+      </el-tabs>
     </div>
 
     <div class="right-table">
       <div class="filter-container">
+        <div class="customer-label">当前客户名称：{{currentRow.customerName}}</div>
         <el-button type="primary" size="small" @click="addProduct('productForm')">添加</el-button>
         <el-button type="success" size="small" @click="editProduct('productForm')">修改</el-button>
         <el-button type="success" size="small" @click="deleteProduct('productForm')">删除</el-button>
-       
+
       </div>
       <el-table :data="currentProductList" border>
 
@@ -31,6 +39,12 @@
     </div>
     <el-dialog title="客户添加" :visible.sync="dialogVisible" width="360px">
       <el-form :model="form" ref="customerForm" label-width="80px" label-position="left">
+        <el-form-item label="客户类型" prop="type">
+          <el-radio-group v-model="form.type">
+            <el-radio :label="1">出货客户</el-radio>
+            <el-radio :label="2">采购客户</el-radio>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item label="客户名称" prop="customerName">
           <el-input v-model="form.customerName" auto-complete="off"></el-input>
         </el-form-item>
@@ -51,8 +65,8 @@
     </el-dialog>
     <!-- 产品弹窗 -->
     <el-dialog title="产品添加" :visible.sync="dialogVisible2" width="360px">
-      <el-form :model="form" ref="productForm" label-width="80px" label-position="left">
-         <el-form-item label="客户名称" prop="customerName">
+      <el-form :model="productForm" ref="productForm" label-width="80px" label-position="left">
+        <el-form-item label="客户名称" prop="customerName">
           <el-input v-model="currentRow.customerName" auto-complete="off" readonly></el-input>
         </el-form-item>
         <el-form-item label="型号" prop="model">
@@ -73,7 +87,12 @@
   </div>
 </template>
 <script>
-import { getCustomerList, addCustomer, getProductListByParentId, addProduct } from '@/api/customer'
+import {
+  getCustomerListByType,
+  addCustomer,
+  getProductListByParentId,
+  addProduct
+} from '@/api/customer'
 import customerList from '@/components/tables/customerList'
 export default {
   name: 'customer',
@@ -82,10 +101,10 @@ export default {
   },
   data() {
     return {
+      tabName: 'out',
       customerList: [],
       currentProductList: [],
-      productList: [
-      ],
+      productList: [],
       currentRow: {
         id: '',
         customerName: ''
@@ -107,6 +126,10 @@ export default {
     }
   },
   methods: {
+    handleClick(tab, event) {
+      this.tabName = tab.name
+      this.loadingCustomerList()
+    },
     addCustomer(customerForm) {
       this.dialogVisible = true
       this.$refs[customerForm].resetFields()
@@ -136,8 +159,9 @@ export default {
       })
     },
     loadingCustomerList() {
-      getCustomerList().then(response => {
-        this.customerList = response.data.list
+      const mp = { out: 1, in: 2 }
+      getCustomerListByType({ type: mp[this.tabName] }).then(response => {
+        this.customerList = response.data
       })
     },
     addProduct(productForm) {
@@ -158,20 +182,22 @@ export default {
 .table-layout {
   display: flex;
   align-items: flex-start;
-  height:100%;
+  height: 100%;
   .left-table {
     flex: 0 0 auto;
-    height: 50px;
     width: 250px;
   }
   .right-table {
-    flex: 0 0 auto;
+    flex: 1 0 auto;
     margin-left: 20px;
-    height: 50px;
-    width: 100%;
   }
   .filter-container {
     margin-bottom: 10px;
+    display: flex;
+    justify-content: flex-end;
+    .customer-label{
+      margin-right: auto;
+    }
   }
 }
 </style>

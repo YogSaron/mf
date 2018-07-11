@@ -4,7 +4,7 @@
       <customer-list :list="customerList"></customer-list>
     </div>
     <div class="right-table">
-      <el-button type="primary"@click="add">新建订单</el-button>
+      <el-button type="primary" @click="add">新建订单</el-button>
       <el-table :data="tableData3" border style="width: 100%">
         <el-table-column prop="customerName" label="客户名称">
         </el-table-column>
@@ -18,6 +18,7 @@
 </template>
 <script>
 import customerList from '@/components/tables/customerList'
+import { getCustomerListByType } from '@/api/customer'
 export default {
   name: 'order',
   components: {
@@ -25,22 +26,39 @@ export default {
   },
   data() {
     return {
-      customerList: [
-        { customerName: '张三' },
-        { customerName: '李四' },
-        { customerName: '王五' }
-      ],
+      customerList: [],
       orderList: [
-        { customerName: '张三', deliveryDate: '2018-05-01', deliveryAddress: '新城路41号' },
-        { customerName: '张三', deliveryDate: '2018-05-02', deliveryAddress: '新城路41号' },
-        { customerName: '张三', deliveryDate: '2018-05-55', deliveryAddress: '新城路41号' }
+        {
+          customerName: '张三',
+          deliveryDate: '2018-05-01',
+          deliveryAddress: '新城路41号'
+        },
+        {
+          customerName: '张三',
+          deliveryDate: '2018-05-02',
+          deliveryAddress: '新城路41号'
+        },
+        {
+          customerName: '张三',
+          deliveryDate: '2018-05-55',
+          deliveryAddress: '新城路41号'
+        }
       ]
     }
   },
   methods: {
+    loadingCustomerList() {
+      const mp = { out: 1, in: 2 }
+      getCustomerListByType({ type: mp['out'] }).then(response => {
+        this.customerList = response.data
+      })
+    },
     add() {
       this.$router.push({ name: 'board' })
     }
+  },
+  mounted() {
+    this.loadingCustomerList()
   }
 }
 </script>

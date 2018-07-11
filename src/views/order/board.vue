@@ -5,24 +5,24 @@
             <el-row :gutter="10">
                 <el-col :span="3">客户名：</el-col>
                 <el-col :span="8">
-                    <el-select v-model="orderForm.customerId">
-                        <el-option v-for="item in mockOptions" :key="item" :label="item" :value="item">
+                    <el-select v-model="orderForm.customerId" filterable clearable @change="handleSelect">
+                        <el-option v-for="item in customerList" :key="item.id" :label="item.customerName" :value="item.id">
                         </el-option>
                     </el-select>
                 </el-col>
             </el-row>
             <el-row :gutter="10">
-                <el-col :span="3">收货地:</el-col>
+                <el-col :span="3">收货地：</el-col>
                 <el-col :span="8">
-                    <el-input type="textarea" :rows="3" v-model="orderForm.deliveryAddress"></el-input>
+                    <el-input type="textarea" :rows="3" v-model="orderForm.deliveryAddress" resize="none"></el-input>
                 </el-col>
                 <el-col :span="3">发货日期:</el-col>
                 <el-col :span="8">
-                    <el-date-picker type="date" value-format="yyyy-MM-dd" v-model="orderForm.deliveryDate"></el-date-picker>
+                    <el-date-picker type="date" format="yyyy-MM-dd" value-format="timestamp" v-model="orderForm.deliveryDate"></el-date-picker>
                 </el-col>
             </el-row>
             <div class="parting-line"></div>
-            <el-button type="primary" icon="el-icon-plus" size="mini" style="margin-bottom:10px;" @click="handleAdd">添加</el-button>
+            <el-button type="primary" icon="el-icon-plus" size="mini" style="margin-bottom:10px;" @click="handleAdd('goodsDetail')">添加</el-button>
             <el-row :span="24">
                 <el-table :data="goodsList" border style="width: 100%">
                     <el-table-column prop="model" label="型号">
@@ -56,16 +56,13 @@
         <el-dialog title="添加" :visible.sync="dialogFormVisible">
             <el-form ref="goodsDetail" label-width="70px" label-position="left" style='width: 400px; margin-left:50px;'>
                 <el-form-item label="型号" prop="model">
-                    <el-select class="filter-item" v-model="goodsDetail.model" placeholder="Please select">
-                        <el-option v-for="item in  mockOptions" :key="item" :label="item" :value="item">
+                    <el-select class="filter-item" v-model="goodsDetail.model" placeholder="Please select" @change="handleModelSelect">
+                        <el-option v-for="item in  productList" :key="item.id" :label="item.model" :value="item.model">
                         </el-option>
                     </el-select>
                 </el-form-item>
-                <el-form-item label="包装" prop="package">
-                    <el-select class="filter-item" v-model="goodsDetail.package" placeholder="Please select">
-                        <el-option v-for="item in  mockOptions" :key="item" :label="item" :value="item">
-                        </el-option>
-                    </el-select>
+                <el-form-item label="包装" prop="packaging">
+                    <el-input v-model="goodsDetail.packaging"></el-input>
                 </el-form-item>
                 <el-form-item label="数量" prop="quantity">
                     <el-input v-model="goodsDetail.quantity"></el-input>
@@ -85,11 +82,13 @@
     </div>
 </template>
 <script>
+import { getCustomerListByType, getProductListByParentId } from '@/api/customer'
 export default {
   data() {
     return {
       dialogFormVisible: false,
-      mockOptions: ['juzi', 'fengli'],
+      customerList: [],
+      productList: [],
       orderForm: {
         customerId: '',
         deliveryAddress: '',
@@ -97,42 +96,59 @@ export default {
       },
       goodsDetail: {
         model: '',
-        package: '',
+        packaging: '',
         quantity: '',
         unitPrice: 0,
-        aggregate: null
+        aggregate: this.computeTotal
       },
-      goodsList: [
-        {
-          model: 'HD091',
-          package: 'djlkal',
-          quantity: '50',
-          unitPrice: 500,
-          aggregate: 25000
-        },
-        {
-          model: 'HD091',
-          package: 'djlkal',
-          quantity: '50',
-          unitPrice: 500,
-          aggregate: 25000
-        }
-      ]
+      goodsList: []
+    }
+  },
+  computed: {
+    computeTotal() {
+      return parseInt(this.goodsDetail.quantity) * this.goodsDetail.unitPrice
     }
   },
   methods: {
     goBack() {
       this.$router.go(-1)
     },
-    handleAdd() {
+    handleSelect(val) {
+      const customer = this.customerList.find(obj => {
+        return obj.id === val
+      })
+      this.orderForm.deliveryAddress = customer.address
+      this.orderForm.customerId = customer.id
+      getProductListByParentId(customer.id).then(response => {
+        this.productList = response.data
+      })
+    },
+    handleModelSelect(val) {
+      const product = this.productList.find(obj => {
+        return obj.model === val
+      })
+      console.log(product)
+      this.goodsDetail.packaging = product.packaging
+      this.goodsDetail.unitPrice = product.unitPrice
+    },
+    handleAdd(formName) {
       this.dialogFormVisible = true
+      this.$refs[formName].resetFields()
     },
     handleUpdate() {
       this.dialogFormVisible = true
     },
     handleDelete(index, rows) {
       rows.splice(index, 1)
+    },
+    loadingCustomerList() {
+      getCustomerListByType({ type: 1 }).then(response => {
+        this.customerList = response.data
+      })
     }
+  },
+  mounted() {
+    this.loadingCustomerList()
   }
 }
 </script>
@@ -140,9 +156,11 @@ export default {
 <style lang="scss" scoped>
 .order-form {
   margin: 0 auto;
-  width: 800px;
+  width: 1000px;
   padding: 10px;
-  border: 1px solid #474747;
+  background: #fff;
+  border: 1px solid #dcdfe6;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.12), 0 0 6px 0 rgba(0, 0, 0, 0.04);
   .parting-line {
     width: 100%;
     height: 0;
