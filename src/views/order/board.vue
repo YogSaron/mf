@@ -101,6 +101,7 @@
 </template>
 <script>
 import { getCustomerListByType, getProductListByParentId } from '@/api/customer'
+import { orderSave } from '@/api/order'
 export default {
   data() {
     return {
@@ -185,17 +186,21 @@ export default {
       })
     },
     submit() {
-      let flag = false
-      for (const key in this.orderForm) {
-        if (!this.orderForm[key]) {
-          flag = true
-          return
-        }
-      }
-      if (flag) {
-        this.$message({ message: '请完善订单信息！', type: 'warning' })
-        return
-      }
+      // let flag = false
+      // for (const key in this.orderForm) {
+      //   if (!this.orderForm[key]) {
+      //     flag = true
+      //     return
+      //   }
+      // }
+      // if (flag) {
+      //   this.$message({ message: '请完善订单信息！', type: 'warning' })
+      //   return
+      // }
+      const form = { goodsList: JSON.stringify(this.goodsList), sysOutOrder: this.orderForm }
+      orderSave(form).then(response => {
+        this.$message({ message: '保存成功', type: 'success' })
+      })
     }
   },
   mounted() {
