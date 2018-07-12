@@ -13,21 +13,35 @@
             </el-row>
             <el-row :gutter="10">
                 <el-col :span="3">收货地：</el-col>
-                <el-col :span="8">
+                <el-col :span="9">
                     <el-input type="textarea" :rows="3" v-model="orderForm.deliveryAddress" resize="none"></el-input>
                 </el-col>
                 <el-col :span="3">发货日期:</el-col>
-                <el-col :span="8">
+                <el-col :span="9">
                     <el-date-picker type="date" format="yyyy-MM-dd" value-format="timestamp" v-model="orderForm.deliveryDate"></el-date-picker>
+                </el-col>
+            </el-row>
+            <el-row :gutter="10">
+                <el-col :span="3">总金额：</el-col>
+                <el-col :span="9">
+                    <el-input v-model="accountPayable" class="input-controller">
+                        <template slot="append">元</template>
+                    </el-input>
+                </el-col>
+                <el-col :span="3">应付款</el-col>
+                <el-col :span="9">
+                    <el-input v-model="accountPayable" class="input-controller">
+                        <template slot="append">元</template>
+                    </el-input>
                 </el-col>
             </el-row>
             <div class="parting-line"></div>
             <el-button type="primary" icon="el-icon-plus" size="mini" style="margin-bottom:10px;" @click="handleAdd('goodsDetail')">添加</el-button>
             <el-row :span="24">
-                <el-table :data="goodsList" border style="width: 100%">
+                <el-table :data="goodsList" border style="width: 100%" show-summary>
                     <el-table-column prop="model" label="型号">
                     </el-table-column>
-                    <el-table-column prop="package" label="包装">
+                    <el-table-column prop="packaging" label="包装">
                     </el-table-column>
                     <el-table-column prop="quantity" label="数量">
                     </el-table-column>
@@ -38,7 +52,7 @@
                     <el-table-column align="center" width="160" label="操作" class-name="small-padding fixed-width">
                         <template slot-scope="scope">
                             <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">编辑</el-button>
-                            <el-button size="mini" type="success" @click="handleDelete(scope.$index,goodsList)">删除
+                            <el-button size="mini" type="danger" @click="handleDelete(scope.$index,goodsList)">删除
                             </el-button>
                         </template>
                     </el-table-column>
@@ -46,36 +60,40 @@
             </el-row>
             <el-row :gutter="10">
                 <el-col :span="4" :offset="8">
-                    <el-button type="primary">提交</el-button>
+                    <el-button type="primary" @click="submit">提交</el-button>
                 </el-col>
                 <el-col :span="4">
                     <el-button @click="goBack">返回</el-button>
                 </el-col>
             </el-row>
         </div>
-        <el-dialog title="添加" :visible.sync="dialogFormVisible">
+        <el-dialog title="添加" :visible.sync="dialogFormVisible" width="500px">
             <el-form ref="goodsDetail" label-width="70px" label-position="left" style='width: 400px; margin-left:50px;'>
-                <el-form-item label="型号" prop="model">
-                    <el-select class="filter-item" v-model="goodsDetail.model" placeholder="Please select" @change="handleModelSelect">
+                <el-form-item label="型号" :prop="goodsDetail.model">
+                    <el-select class="filter-item input-controller" v-model="goodsDetail.model" placeholder="Please select" @change="handleModelSelect" filterable>
                         <el-option v-for="item in  productList" :key="item.id" :label="item.model" :value="item.model">
                         </el-option>
                     </el-select>
                 </el-form-item>
                 <el-form-item label="包装" prop="packaging">
-                    <el-input v-model="goodsDetail.packaging"></el-input>
+                    <el-input v-model="goodsDetail.packaging" class="input-controller"></el-input>
                 </el-form-item>
                 <el-form-item label="数量" prop="quantity">
-                    <el-input v-model="goodsDetail.quantity"></el-input>
+                    <el-input v-model="goodsDetail.quantity" class="input-controller"></el-input>
                 </el-form-item>
                 <el-form-item label="单价" prop="unitPrice">
-                    <el-input v-model="goodsDetail.unitPrice"></el-input>
+                    <el-input v-model.number="goodsDetail.unitPrice" class="input-controller">
+                        <template slot="append">元</template>
+                    </el-input>
                 </el-form-item>
                 <el-form-item label="金额" prop="aggregate">
-                    <el-input v-model="goodsDetail.aggregate"></el-input>
+                    <el-input v-model.number="aggregate" class="input-controller">
+                        <template slot="append">元</template>
+                    </el-input>
                 </el-form-item>
             </el-form>
             <div slot="footer" class="dialog-footer">
-                <el-button @click="dialogFormVisible = false">确定</el-button>
+                <el-button @click="addRow">确定</el-button>
                 <el-button type="primary" @click="dialogFormVisible = false">取消</el-button>
             </div>
         </el-dialog>
@@ -88,25 +106,35 @@ export default {
     return {
       dialogFormVisible: false,
       customerList: [],
-      productList: [],
+      productList: [], // 下拉选的list
       orderForm: {
         customerId: '',
         deliveryAddress: '',
-        deliveryDate: ''
+        deliveryDate: '',
+        accountPayable: 0,
+        remark: '',
+        totalAmount: 0
       },
       goodsDetail: {
         model: '',
         packaging: '',
         quantity: '',
         unitPrice: 0,
-        aggregate: this.computeTotal
+        aggregate: ''
       },
-      goodsList: []
+      goodsList: [] // 订单的型号
     }
   },
   computed: {
-    computeTotal() {
-      return parseInt(this.goodsDetail.quantity) * this.goodsDetail.unitPrice
+    aggregate() {
+      return this.goodsDetail.quantity * this.goodsDetail.unitPrice
+    },
+    accountPayable() {
+      let sum = 0
+      for (const obj of this.goodsList) {
+        sum += obj.aggregate
+      }
+      return sum
     }
   },
   methods: {
@@ -127,13 +155,23 @@ export default {
       const product = this.productList.find(obj => {
         return obj.model === val
       })
-      console.log(product)
       this.goodsDetail.packaging = product.packaging
       this.goodsDetail.unitPrice = product.unitPrice
     },
+    addRow() {
+      this.goodsDetail.aggregate = this.aggregate
+      this.goodsList.push(Object.assign([], this.goodsDetail))
+      this.dialogFormVisible = false
+    },
     handleAdd(formName) {
+      if (!this.orderForm.customerId) {
+        this.$message({ message: '请先选择客户！', type: 'warning' })
+        return
+      }
       this.dialogFormVisible = true
-      this.$refs[formName].resetFields()
+      for (const key in this.goodsDetail) {
+        this.goodsDetail[key] = ''
+      }
     },
     handleUpdate() {
       this.dialogFormVisible = true
@@ -145,6 +183,19 @@ export default {
       getCustomerListByType({ type: 1 }).then(response => {
         this.customerList = response.data
       })
+    },
+    submit() {
+      let flag = false
+      for (const key in this.orderForm) {
+        if (!this.orderForm[key]) {
+          flag = true
+          return
+        }
+      }
+      if (flag) {
+        this.$message({ message: '请完善订单信息！', type: 'warning' })
+        return
+      }
     }
   },
   mounted() {
@@ -173,5 +224,8 @@ export default {
   &:last-child {
     margin-bottom: 0;
   }
+}
+.input-controller {
+  width: 230px;
 }
 </style>
