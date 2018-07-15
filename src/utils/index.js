@@ -43,7 +43,8 @@ export function formatTime(time, option) {
 
   if (diff < 30) {
     return '刚刚'
-  } else if (diff < 3600) { // less 1 hour
+  } else if (diff < 3600) {
+    // less 1 hour
     return Math.ceil(diff / 60) + '分钟前'
   } else if (diff < 3600 * 24) {
     return Math.ceil(diff / 3600) + '小时前'
@@ -53,6 +54,28 @@ export function formatTime(time, option) {
   if (option) {
     return parseTime(time, option)
   } else {
-    return d.getMonth() + 1 + '月' + d.getDate() + '日' + d.getHours() + '时' + d.getMinutes() + '分'
+    return (
+      d.getMonth() +
+      1 +
+      '月' +
+      d.getDate() +
+      '日' +
+      d.getHours() +
+      '时' +
+      d.getMinutes() +
+      '分'
+    )
   }
+}
+
+export function partialAssign(targetObj, sourceObj) {
+  for (let tarObj in targetObj) {// eslint-disable-line
+    for (let souObj in sourceObj) {// eslint-disable-line
+      if (tarObj === souObj) {// eslint-disable-line
+        targetObj[tarObj] = sourceObj[souObj]
+        return
+      }
+    }
+  }
+  return targetObj
 }

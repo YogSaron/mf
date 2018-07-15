@@ -3,6 +3,7 @@
 @import './transition.scss';
 @import './element-ui.scss';
 @import './sidebar.scss';
+@import './btn.scss';
 
 body {
   height: 100%;
@@ -75,4 +76,13 @@ a:hover {
 
 .app-container {
   padding: 20px;
+}
+
+.row-style{
+  cursor: pointer;
+}
+
+//分页
+.pagination-container {
+  margin-top: 30px;
 }

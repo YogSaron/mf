@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <div class="order-form">
-      <h2>明发汽配单</h2>
+      <h2>明发材料采购单</h2>
       <el-row :gutter="10">
         <el-col :span="3"><label class="label-controller">客户名：</label></el-col>
         <el-col :span="8">
@@ -202,7 +202,7 @@ export default {
       rows.splice(index, 1)
     },
     loadingCustomerList() {
-      getCustomerListByType({ type: 1 }).then(response => {
+      getCustomerListByType({ type: 2 }).then(response => {
         this.customerList = response.data
       })
     },

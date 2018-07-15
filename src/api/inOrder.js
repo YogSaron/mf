@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export function orderSave(form) {
   return request({
-    url: '/sys/out/order/orderSave',
+    url: '/sys/in/order/orderSave',
     method: 'post',
     data: form
   })
@@ -10,7 +10,7 @@ export function orderSave(form) {
 
 export function entireOrderUpdate(form) {
   return request({
-    url: '/sys/out/order/orderUpdate',
+    url: '/sys/in/order/orderUpdate',
     method: 'post',
     data: form
   })
@@ -18,14 +18,14 @@ export function entireOrderUpdate(form) {
 
 export function getOrderByCustomerId(form) {
   return request({
-    url: '/sys/out/order/detailByCustomerId',
+    url: '/sys/in/order/detailByCustomerId',
     method: 'get',
     params: form
   })
 }
 export function getOrderById(oid) {
   return request({
-    url: '/sys/out/order/detail',
+    url: '/sys/in/order/detail',
     method: 'post',
     data: { id: oid }
   })
@@ -33,7 +33,7 @@ export function getOrderById(oid) {
 
 export function getOrderListByType(form) {
   return request({
-    url: '/sys/out/order/list',
+    url: '/sys/in/order/list',
     method: 'post',
     data: form
   })
@@ -41,7 +41,7 @@ export function getOrderListByType(form) {
 
 export function deleteOneOrder(oid) {
   return request({
-    url: '/sys/out/order/deleteOneOrder',
+    url: '/sys/in/order/deleteOneOrder',
     method: 'post',
     data: { id: oid }
   })
@@ -49,9 +49,8 @@ export function deleteOneOrder(oid) {
 
 export function getEntireOrderById(oid) {
   return request({
-    url: '/sys/out/order/detailById',
+    url: '/sys/in/order/detailById',
     method: 'get',
     params: { id: oid }
   })
 }
-
