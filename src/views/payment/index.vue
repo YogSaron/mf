@@ -16,6 +16,9 @@
         <el-date-picker v-model="queryList.searchDate" type="daterange" :picker-options="pickerOptions2" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" align="right" value-format="yyyy-MM-dd" :unlink-panels="true">
         </el-date-picker>
         <el-button type="primary" @click="loadingOrderList">查询</el-button>
+        <div class="sum">
+          <div class="sum-title">{{currentCustomer.customerName?currentCustomer.customerName:'所有客户'}}：总计应收款</div><div class="sum-text"><svg-icon icon-class="money" /><count-to class="card-panel-num" :startVal="0" :endVal="sumAmount" :duration="1000"></count-to></div>
+        </div>
       </div>
       <el-table :data="paymentList" border>
         <el-table-column type="index">
@@ -74,12 +77,14 @@
 <script>
 import customerList from '@/components/tables/customerList'
 import { getCustomerListByType } from '@/api/customer'
-import { getOrderByCustomerId } from '@/api/order'
+import { getOrderByCustomerId, getSumAmount } from '@/api/order'
 import { outPaymentSave } from '@/api/payment'
 import { parseTime } from '@/utils/index'
+import CountTo from 'vue-count-to'
 export default {
   components: {
-    customerList
+    customerList,
+    CountTo
   },
   data() {
     return {
@@ -87,6 +92,7 @@ export default {
       dialogVisible: false,
       customerList: [],
       paymentList: [],
+      sumAmount: '',
       currentCustomer: {
         id: '',
         customerName: ''
@@ -202,9 +208,7 @@ export default {
         page: this.queryList.currentPage,
         size: this.queryList.pageSize,
         customerId: -1,
-        startDate: this.queryList.searchDate
-          ? this.queryList.searchDate[0]
-          : '',
+        startDate: this.queryList.searchDate ? this.queryList.searchDate[0] : '',
         endDate: this.queryList.searchDate ? this.queryList.searchDate[1] : ''
       }
       if (this.currentCustomer.id) {
@@ -213,6 +217,9 @@ export default {
       getOrderByCustomerId(form).then(response => {
         this.paymentList = response.data.list
         this.queryList.total = response.data.total
+      })
+      getSumAmount(form).then(response => {
+        this.sumAmount = response.data
       })
     },
     // 分页
@@ -252,4 +259,17 @@ export default {
     margin-bottom: 10px;
   }
 }
+      .card-panel-num {
+        font-size: 20px;
+      }
+
+  .sum{
+    display: flex;
+    .sum-title{
+      padding:9px;
+    }
+    .sum-text{
+      padding:5px;
+    }
+  }
 </style>

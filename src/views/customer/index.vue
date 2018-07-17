@@ -25,6 +25,7 @@
       <el-table :data="currentProductList" border>
         <el-table-column type="index">
         </el-table-column>
+        <el-table-column prop="materialType" label="材料类型" v-if="currentRow.type=='2'"></el-table-column>
         <el-table-column prop="model" label="产品型号">
         </el-table-column>
         <el-table-column prop="packaging" label="包装">
@@ -68,6 +69,9 @@
       <el-form :model="productForm" ref="productForm" label-width="80px" label-position="left">
         <el-form-item label="客户名称" prop="customerName">
           <el-input v-model="currentRow.customerName" auto-complete="off" readonly></el-input>
+        </el-form-item>
+         <el-form-item label="材料类型" prop="materialType" v-if="currentRow.type=='2'">
+          <el-input v-model="productForm.materialType" auto-complete="off"></el-input>
         </el-form-item>
         <el-form-item label="型号" prop="model">
           <el-input v-model="productForm.model" auto-complete="off"></el-input>
@@ -123,6 +127,7 @@ export default {
       },
       productForm: {
         model: '',
+        materialType: '',
         packaging: '',
         unitPrice: ''
       },

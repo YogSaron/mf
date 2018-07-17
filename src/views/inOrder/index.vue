@@ -17,12 +17,12 @@
             {{scope.row.customerName}}
           </template>
         </el-table-column>
+        <el-table-column label="材料类型" prop="materialType">
+        </el-table-column>
         <el-table-column label="交货日期">
           <template slot-scope="scope">
-            {{ scope.row.deliveryDate | timeFilter }}
+            {{ scope.row.receiptDate | timeFilter }}
           </template>
-        </el-table-column>
-        <el-table-column prop="deliveryAddress" label="地址" width="280">
         </el-table-column>
         <el-table-column label="总金额">
           <template slot-scope="scope">
@@ -47,7 +47,7 @@
 <script>
 import customerList from '@/components/tables/customerList'
 import { getCustomerListByType } from '@/api/customer'
-import { getOrderByCustomerId, deleteOneOrder } from '@/api/order'
+import { getOrderByCustomerId, deleteOneOrder } from '@/api/inOrder'
 import { parseTime } from '@/utils/index'
 export default {
   name: 'order',

@@ -55,3 +55,11 @@ export function getEntireOrderById(oid) {
   })
 }
 
+export function getSumAmount(form) {
+  return request({
+    url: '/sys/out/order/getSumAmount',
+    method: 'post',
+    params: form
+  })
+}
+
