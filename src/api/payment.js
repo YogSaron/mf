@@ -7,3 +7,11 @@ export function outPaymentSave(form) {
     data: form
   })
 }
+
+export function inPaymentSave(form) {
+  return request({
+    url: '/sys/in/order/paymentSave',
+    method: 'post',
+    data: form
+  })
+}

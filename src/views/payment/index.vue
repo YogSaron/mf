@@ -17,7 +17,11 @@
         </el-date-picker>
         <el-button type="primary" @click="loadingOrderList">查询</el-button>
         <div class="sum">
-          <div class="sum-title">{{currentCustomer.customerName?currentCustomer.customerName:'所有客户'}}：总计应收款</div><div class="sum-text"><svg-icon icon-class="money" /><count-to class="card-panel-num" :startVal="0" :endVal="sumAmount" :duration="1000"></count-to></div>
+          <div class="sum-title">{{currentCustomer.customerName?currentCustomer.customerName:'所有客户'}}：总计货款</div>
+          <div class="sum-text">
+            <svg-icon icon-class="money" />
+            <count-to class="card-panel-num" :startVal="0" :endVal="sumAmount" :duration="1000"></count-to>
+          </div>
         </div>
       </div>
       <el-table :data="paymentList" border>
@@ -25,9 +29,14 @@
         </el-table-column>
         <el-table-column prop="customerName" label="客户名称">
         </el-table-column>
-        <el-table-column prop="deliveryDate" label="交付时间">
+        <el-table-column prop="deliveryDate" label="交付时间" v-if="tabName == 'out'">
           <template slot-scope="scope">
             {{ scope.row.deliveryDate | timeFilter }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="deliveryDate" label="交付时间" v-else>
+          <template slot-scope="scope">
+            {{ scope.row.receiptDate | timeFilter }}
           </template>
         </el-table-column>
         <el-table-column label="类型">
@@ -62,8 +71,11 @@
               <template slot="append">元</template>
             </el-input>
           </el-form-item>
-          <el-form-item label="付款日期" prop="deliveryDate">
+          <el-form-item label="收款日期" prop="deliveryDate" v-if="this.tabName == 'out'">
             <el-date-picker type="date" format="yyyy-MM-dd" value-format="yyyy-MM-dd" v-model="payForm.deliveryDate"></el-date-picker>
+          </el-form-item>
+          <el-form-item label="付款日期" prop="receiptDate" v-else>
+            <el-date-picker type="date" format="yyyy-MM-dd" value-format="yyyy-MM-dd" v-model="payForm.receiptDate"></el-date-picker>
           </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
@@ -78,7 +90,11 @@
 import customerList from '@/components/tables/customerList'
 import { getCustomerListByType } from '@/api/customer'
 import { getOrderByCustomerId, getSumAmount } from '@/api/order'
-import { outPaymentSave } from '@/api/payment'
+import {
+  getOrderByCustomerId as getInOrderByCustomerId,
+  getSumAmount as getInSumAmount
+} from '@/api/inOrder'
+import { outPaymentSave, inPaymentSave } from '@/api/payment'
 import { parseTime } from '@/utils/index'
 import CountTo from 'vue-count-to'
 export default {
@@ -108,7 +124,8 @@ export default {
         customerId: '',
         customerName: '',
         totalAmount: '',
-        deliveryDate: ''
+        deliveryDate: '',
+        receiptDate: ''
       },
       pickerOptions2: {
         shortcuts: [
@@ -177,17 +194,25 @@ export default {
         this.$message({ type: 'warning', message: '请输入收款金额！' })
         return
       }
-      if (!this.payForm.deliveryDate) {
+      if (!this.payForm.deliveryDate & !this.payForm.receiptDate) {
         this.$message({ type: 'warning', message: '请输入日期！' })
         return
       }
       this.payForm.customerId = this.currentCustomer.id
       this.payForm.customerName = this.currentCustomer.customerName
-      outPaymentSave(this.payForm).then(response => {
-        this.dialogVisible = false
-        this.loadingOrderList()
-        this.$message({ type: 'success', message: '保存成功' })
-      })
+      if (this.tabName === 'out') {
+        outPaymentSave(this.payForm).then(response => {
+          this.dialogVisible = false
+          this.loadingOrderList()
+          this.$message({ type: 'success', message: '保存成功' })
+        })
+      } else {
+        inPaymentSave(this.payForm).then(response => {
+          this.dialogVisible = false
+          this.loadingOrderList()
+          this.$message({ type: 'success', message: '保存成功' })
+        })
+      }
     },
     loadingCustomerList() {
       const mp = { out: 1, in: 2 }
@@ -197,6 +222,7 @@ export default {
     },
     handleClick(tab, event) {
       this.tabName = tab.name
+      this.currentCustomer = {}
       this.loadingCustomerList()
     },
     chooseCustomer(row) {
@@ -208,19 +234,32 @@ export default {
         page: this.queryList.currentPage,
         size: this.queryList.pageSize,
         customerId: -1,
-        startDate: this.queryList.searchDate ? this.queryList.searchDate[0] : '',
+        startDate: this.queryList.searchDate
+          ? this.queryList.searchDate[0]
+          : '',
         endDate: this.queryList.searchDate ? this.queryList.searchDate[1] : ''
       }
       if (this.currentCustomer.id) {
         form.customerId = this.currentCustomer.id
       }
-      getOrderByCustomerId(form).then(response => {
-        this.paymentList = response.data.list
-        this.queryList.total = response.data.total
-      })
-      getSumAmount(form).then(response => {
-        this.sumAmount = response.data
-      })
+
+      if (this.tabName === 'out') {
+        getOrderByCustomerId(form).then(response => {
+          this.paymentList = response.data.list
+          this.queryList.total = response.data.total
+        })
+        getSumAmount(form).then(response => {
+          this.sumAmount = response.data
+        })
+      } else {
+        getInOrderByCustomerId(form).then(response => {
+          this.paymentList = response.data.list
+          this.queryList.total = response.data.total
+        })
+        getInSumAmount(form).then(response => {
+          this.sumAmount = response.data
+        })
+      }
     },
     // 分页
     handleCurrentChange(val) {
@@ -259,17 +298,17 @@ export default {
     margin-bottom: 10px;
   }
 }
-      .card-panel-num {
-        font-size: 20px;
-      }
+.card-panel-num {
+  font-size: 20px;
+}
 
-  .sum{
-    display: flex;
-    .sum-title{
-      padding:9px;
-    }
-    .sum-text{
-      padding:5px;
-    }
+.sum {
+  display: flex;
+  .sum-title {
+    padding: 9px;
   }
+  .sum-text {
+    padding: 5px;
+  }
+}
 </style>

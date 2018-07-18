@@ -54,3 +54,11 @@ export function getEntireOrderById(oid) {
     params: { id: oid }
   })
 }
+
+export function getSumAmount(form) {
+  return request({
+    url: '/sys/in/order/getSumAmount',
+    method: 'post',
+    params: form
+  })
+}

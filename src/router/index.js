@@ -44,18 +44,6 @@ export const constantRouterMap = [
     ]
   },
   {
-    path: '/customer',
-    component: Layout,
-    children: [
-      {
-        path: 'index',
-        name: 'customer',
-        component: () => import('@/views/customer/index'),
-        meta: { title: '客户管理', icon: 'peoples' }
-      }
-    ]
-  },
-  {
     path: '/order',
     component: Layout,
     children: [
@@ -100,6 +88,18 @@ export const constantRouterMap = [
         name: 'payment',
         component: () => import('@/views/payment/index'),
         meta: { title: '收付款管理', icon: 'money' }
+      }
+    ]
+  },
+  {
+    path: '/customer',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: 'customer',
+        component: () => import('@/views/customer/index'),
+        meta: { title: '客户管理', icon: 'peoples' }
       }
     ]
   },

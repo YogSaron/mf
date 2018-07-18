@@ -221,7 +221,7 @@ export default {
       getEntireOrderById(pageId).then(response => {
         const { data } = response
         this.goodsList = JSON.parse(data.goodsList)
-        this.orderForm = JSON.parse(data.sysOutOrder)
+        this.orderForm = JSON.parse(data.order)
       })
     },
     submit() {
