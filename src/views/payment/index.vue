@@ -51,8 +51,8 @@
         </el-table-column>
         <el-table-column align="center" label="操作" width="180" class-name="small-padding fixed-width">
           <template slot-scope="scope">
-            <el-button type="primary" size="mini" icon="el-icon-search" @click="handleCheck(scope.row.id)" round>查看</el-button>
-            <el-button size="mini" type="danger" icon="el-icon-delete" @click="handleDelete(scope.row.id)" round>
+            <el-button v-if="scope.row.flag=='1'" type="primary" size="mini" icon="el-icon-search" @click="handleCheck(scope.row.id)" round>查看</el-button>
+            <el-button v-else size="mini" type="danger" icon="el-icon-delete" @click="handleDelete(scope.row.id)" round>删除
             </el-button>
           </template>
         </el-table-column>
@@ -89,10 +89,11 @@
 <script>
 import customerList from '@/components/tables/customerList'
 import { getCustomerListByType } from '@/api/customer'
-import { getOrderByCustomerId, getSumAmount } from '@/api/order'
+import { getOrderByCustomerId, getSumAmount, deleteOneOrder } from '@/api/order'
 import {
   getOrderByCustomerId as getInOrderByCustomerId,
-  getSumAmount as getInSumAmount
+  getSumAmount as getInSumAmount,
+  deleteOneOrder as deleteOneInOrder
 } from '@/api/inOrder'
 import { outPaymentSave, inPaymentSave } from '@/api/payment'
 import { parseTime } from '@/utils/index'
@@ -108,7 +109,7 @@ export default {
       dialogVisible: false,
       customerList: [],
       paymentList: [],
-      sumAmount: '',
+      sumAmount: 0,
       currentCustomer: {
         id: '',
         customerName: ''
@@ -249,7 +250,7 @@ export default {
           this.queryList.total = response.data.total
         })
         getSumAmount(form).then(response => {
-          this.sumAmount = response.data
+          this.sumAmount = parseFloat(response.data)
         })
       } else {
         getInOrderByCustomerId(form).then(response => {
@@ -257,7 +258,7 @@ export default {
           this.queryList.total = response.data.total
         })
         getInSumAmount(form).then(response => {
-          this.sumAmount = response.data
+          this.sumAmount = parseFloat(response.data)
         })
       }
     },
@@ -272,6 +273,24 @@ export default {
     },
     handleCheck(pid) {
       this.$router.push({ name: 'board', query: { pageId: pid }})
+    },
+    handleDelete(pid) {
+      const str = this.tabName === 'out' ? '收款' : '付款'
+      this.$confirm(`确定删除该${str}？`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'danger'
+      }).then(() => {
+        if (this.tabName === 'out') {
+          deleteOneOrder(pid).then(response => {
+            this.loadingCustomerList()
+          })
+        } else {
+          deleteOneInOrder(pid).then(response => {
+            this.loadingOrderList()
+          })
+        }
+      })
     }
   },
   mounted() {

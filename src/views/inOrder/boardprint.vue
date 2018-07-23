@@ -2,10 +2,12 @@
   <div class="app-container">
     <div class="order-form">
       <el-row style="text-align:center;">
-      <h2>明发汽配单</h2>
+      <h2>明发材料采购单</h2>
       </el-row>
       <el-row :gutter="10">
-        <el-col :span="3"><label class="label-controller">客户名：</label></el-col>
+        <el-col :span="3">
+          <label class="label-controller">客户名：</label>
+        </el-col>
         <el-col :span="8">
           <el-select v-model="orderForm.customerId" filterable clearable @change="handleSelect" :disabled="isRead">
             <el-option v-for="item in customerList" :key="item.id" :label="item.customerName" :value="item.id">
@@ -14,21 +16,31 @@
         </el-col>
       </el-row>
       <el-row :gutter="10">
-        <el-col :span="3"><label class="label-controller">收货地：</label></el-col>
-        <el-col :span="9">
-          <el-input type="textarea" :rows="3" v-model="orderForm.deliveryAddress" resize="none" :readonly="isRead"></el-input>
+        <el-col :span="3">
+          <label class="label-controller">材料类型</label>
         </el-col>
-        <el-col :span="3"><label class="label-controller">发货日期：</label></el-col>
         <el-col :span="9">
-          <el-date-picker type="date" format="yyyy-MM-dd" value-format="timestamp" v-model="orderForm.deliveryDate" :readonly="isRead"></el-date-picker>
+          <el-input class="input-controller" v-model="orderForm.materialType" resize="none" :readonly="isRead"></el-input>
+        </el-col>
+        <el-col :span="3">
+          <label class="label-controller">收货日期：</label>
+        </el-col>
+        <el-col :span="9">
+          <el-date-picker type="date" format="yyyy-MM-dd" value-format="timestamp" v-model="orderForm.receiptDate" :readonly="isRead"></el-date-picker>
         </el-col>
       </el-row>
       <el-row :gutter="10">
-        <el-col :span="3"><label class="label-controller">总金额：</label></el-col>
-        <el-col :span="9" style="padding-top:5px;">
-          <span>{{accountPayable}}元</span>
+        <el-col :span="3">
+          <label class="label-controller">总金额：</label>
         </el-col>
-        <el-col :span="3"><label class="label-controller">备注：</label></el-col>
+        <el-col :span="9">
+          <el-input v-model="accountPayable" class="input-controller" :readonly="isRead">
+            <template slot="append">元</template>
+          </el-input>
+        </el-col>
+        <el-col :span="3">
+          <label class="label-controller">备注：</label>
+        </el-col>
         <el-col :span="9">
           <el-input type="textarea" v-model="orderForm.remark" :rows="3" class="input-controller" resize="none" :readonly="isRead">
           </el-input>
@@ -48,25 +60,11 @@
           </el-table-column>
           <el-table-column prop="aggregate" label="金额">
           </el-table-column>
-          <el-table-column align="center" width="160" label="操作" class-name="small-padding fixed-width">
-            <template slot-scope="scope">
-              <el-button v-if="!isRead" type="primary" size="mini" @click="handleUpdate(scope.row,scope.$index)">编辑</el-button>
-              <el-button v-if="!isRead" size="mini" type="danger" @click="handleDelete(scope.$index,goodsList)">删除
-              </el-button>
-            </template>
-          </el-table-column>
         </el-table>
       </el-row>
       <el-row :gutter="10">
-        <el-col :span="4" :offset="8">
-          <el-button v-if="!isRead" type="primary" @click="submit">提交</el-button>
-          <el-button v-else type="warning" @click="pageEdit">编辑</el-button>
-        </el-col>
         <el-col :span="4">
           <el-button @click="goBack">返回</el-button>
-        </el-col>
-        <el-col :span="4">
-          <el-button @click="print">打印</el-button>
         </el-col>
       </el-row>
     </div>
@@ -77,9 +75,6 @@
             <el-option v-for="item in  productList" :key="item.id" :label="item.model" :value="item.model">
             </el-option>
           </el-select>
-        </el-form-item>
-        <el-form-item label="包装" prop="packaging">
-          <el-input v-model="goodsDetail.packaging" class="input-controller"></el-input>
         </el-form-item>
         <el-form-item label="数量" prop="quantity">
           <el-input v-model="goodsDetail.quantity" class="input-controller"></el-input>
@@ -104,7 +99,7 @@
 </template>
 <script>
 import { getCustomerListByType, getProductListByParentId } from '@/api/customer'
-import { orderSave, getEntireOrderById, entireOrderUpdate } from '@/api/order'
+import { orderSave, getEntireOrderById, entireOrderUpdate } from '@/api/inOrder'
 // import { partialAssign } from '@/utils/index'
 export default {
   data() {
@@ -118,8 +113,9 @@ export default {
         id: '',
         customerId: '',
         customerName: '',
-        deliveryAddress: '',
-        deliveryDate: '',
+        receiptAddress: '',
+        receiptDate: '',
+        materialType: [],
         accountPayable: 0,
         remark: '',
         totalAmount: 0
@@ -148,9 +144,6 @@ export default {
     }
   },
   methods: {
-    print() {
-      window.print()
-    },
     goBack() {
       this.$router.go(-1)
     },
@@ -164,7 +157,7 @@ export default {
       const customer = this.customerList.find(obj => {
         return obj.id === val
       })
-      this.orderForm.deliveryAddress = customer.address
+      // this.orderForm.deliveryAddress = customer.address
       this.orderForm.customerId = customer.id
       this.orderForm.customerName = customer.customerName
       getProductListByParentId(customer.id).then(response => {
@@ -177,7 +170,10 @@ export default {
       })
       this.goodsDetail.packaging = product.packaging
       this.goodsDetail.unitPrice = product.unitPrice
+      this.orderForm.materialType.push(product.materialType)
+      this.orderForm.materialType = Array.from(new Set(this.orderForm.materialType))
     },
+    // 确认添加
     addRow() {
       this.goodsDetail.aggregate = this.aggregate
       if (this.goodsDetail.index) {
@@ -208,7 +204,7 @@ export default {
       rows.splice(index, 1)
     },
     loadingCustomerList() {
-      getCustomerListByType({ type: 1 }).then(response => {
+      getCustomerListByType({ type: 2 }).then(response => {
         this.customerList = response.data
       })
     },
@@ -220,8 +216,8 @@ export default {
       })
     },
     submit() {
-      if (!this.orderForm.deliveryDate) {
-        this.$message({ message: '请选择交货时间', type: 'warning' })
+      if (!this.orderForm.receiptDate) {
+        this.$message({ message: '请选择收货时间', type: 'warning' })
         return
       }
       if (!this.orderForm.customerId) {
@@ -233,7 +229,7 @@ export default {
         this.orderForm.id = this.pageId
         const form = {
           goodsList: JSON.stringify(this.goodsList),
-          sysOutOrder: JSON.stringify(this.orderForm)
+          sysInOrder: JSON.stringify(this.orderForm)
         }
         entireOrderUpdate(form).then(response => {
           this.$message({ message: '更新成功', type: 'success' })
@@ -242,7 +238,7 @@ export default {
       } else {
         const form = {
           goodsList: JSON.stringify(this.goodsList),
-          sysOutOrder: JSON.stringify(this.orderForm)
+          sysInOrder: JSON.stringify(this.orderForm)
         }
         orderSave(form).then(response => {
           this.$message({ message: '保存成功', type: 'success' })
@@ -289,8 +285,8 @@ export default {
 .input-controller {
   width: 230px;
 }
-.label-controller{
-  width:100%;
+.label-controller {
+  width: 100%;
   text-align: right;
   display: block;
   margin-top: 5px;

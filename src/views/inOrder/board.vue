@@ -1,7 +1,9 @@
 <template>
   <div class="app-container">
     <div class="order-form">
+      <el-row style="text-align:center;">
       <h2>明发材料采购单</h2>
+      </el-row>
       <el-row :gutter="10">
         <el-col :span="3">
           <label class="label-controller">客户名：</label>
@@ -31,10 +33,8 @@
         <el-col :span="3">
           <label class="label-controller">总金额：</label>
         </el-col>
-        <el-col :span="9">
-          <el-input v-model="accountPayable" class="input-controller" :readonly="isRead">
-            <template slot="append">元</template>
-          </el-input>
+        <el-col :span="9" style="padding-top:5px;">
+          <span>{{accountPayable}}元</span>
         </el-col>
         <el-col :span="3">
           <label class="label-controller">备注：</label>
@@ -74,6 +74,10 @@
         </el-col>
         <el-col :span="4">
           <el-button @click="goBack">返回</el-button>
+        </el-col>
+        <el-col :span="4">
+          <!-- <router-link target="_blank" :to="{name:'inPrint', params: { pid:pageId }}">打印</router-link> -->
+          <el-button @click="print">打印</el-button>
         </el-col>
       </el-row>
     </div>
@@ -153,6 +157,9 @@ export default {
     }
   },
   methods: {
+    print() {
+      window.print()
+    },
     goBack() {
       this.$router.go(-1)
     },

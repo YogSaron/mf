@@ -68,14 +68,76 @@ export function formatTime(time, option) {
   }
 }
 
-export function partialAssign(targetObj, sourceObj) {
-  for (let tarObj in targetObj) {// eslint-disable-line
-    for (let souObj in sourceObj) {// eslint-disable-line
-      if (tarObj === souObj) {// eslint-disable-line
-        targetObj[tarObj] = sourceObj[souObj]
-        return
+export const pickerOptions = [
+  {
+    text: '今天',
+    onClick(picker) {
+      const end = new Date()
+      const start = new Date(new Date().toDateString())
+      end.setTime(start.getTime())
+      picker.$emit('pick', [start, end])
+    }
+  },
+  {
+    text: '最近一周',
+    onClick(picker) {
+      const end = new Date(new Date().toDateString())
+      const start = new Date()
+      start.setTime(end.getTime() - 3600 * 1000 * 24 * 7)
+      picker.$emit('pick', [start, end])
+    }
+  },
+  {
+    text: '最近一个月',
+    onClick(picker) {
+      const end = new Date(new Date().toDateString())
+      const start = new Date()
+      start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
+      picker.$emit('pick', [start, end])
+    }
+  },
+  {
+    text: '最近三个月',
+    onClick(picker) {
+      const end = new Date(new Date().toDateString())
+      const start = new Date()
+      start.setTime(start.getTime() - 3600 * 1000 * 24 * 90)
+      picker.$emit('pick', [start, end])
+    }
+  }
+]
+
+export function debounce(func, wait, immediate) {
+  let timeout, args, context, timestamp, result
+
+  const later = function() {
+    // 据上一次触发时间间隔
+    const last = +new Date() - timestamp
+
+    // 上次被包装函数被调用时间间隔last小于设定时间间隔wait
+    if (last < wait && last > 0) {
+      timeout = setTimeout(later, wait - last)
+    } else {
+      timeout = null
+      // 如果设定为immediate===true，因为开始边界已经调用过了此处无需调用
+      if (!immediate) {
+        result = func.apply(context, args)
+        if (!timeout) context = args = null
       }
     }
   }
-  return targetObj
+
+  return function(...args) {
+    context = this
+    timestamp = +new Date()
+    const callNow = immediate && !timeout
+    // 如果延时不存在，重新设定延时
+    if (!timeout) timeout = setTimeout(later, wait)
+    if (callNow) {
+      result = func.apply(context, args)
+      context = args = null
+    }
+
+    return result
+  }
 }
