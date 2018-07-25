@@ -48,6 +48,14 @@ export function getProductListByParentId(parentId) {
   })
 }
 
+export function getProductListByType(type) {
+  return request({
+    url: '/sys/out/cus/product/list',
+    method: 'post',
+    params: { type }
+  })
+}
+
 export function addProduct(form) {
   return request({
     url: '/sys/out/cus/product/add',

@@ -117,7 +117,7 @@ export default {
       queryList: {
         currentPage: 1,
         total: 50,
-        pageSize: 5,
+        pageSize: 10,
         searchDate: ''
       },
       payForm: {
